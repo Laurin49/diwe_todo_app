@@ -15,8 +15,21 @@ class TodoController extends Controller
      */
     public function index()
     {
-        $todos = Todo::all();
-        return view('todos.index', ['todos' => $todos]);
+        $categories = Category::all();
+        $todos = $this->getTodos(request('search'));
+        return view('todos.index', [
+            'todos' => $todos,
+            'categories' => $categories
+        ]);
+    }
+
+    private function getTodos($search) {
+        if (!isset($search)) {
+            $todos = Todo::orderBy('prior', 'asc')->paginate(10)->withQueryString();
+        } else {
+            $todos = Todo::where('name', 'like', '%' . $search . '%')->paginate(10)->withQueryString();
+        }
+        return $todos;
     }
 
     /**
@@ -40,10 +53,12 @@ class TodoController extends Controller
     {
         $request->validate([
             'name' => 'required|min:3',
+            'prior' => 'required|max:99',
             'category_id' => 'required'
         ]);
         Todo::create([
             'name' => $request->name,
+            'prior' => $request->prior,
             'category_id' => $request->category_id
         ]);
         return redirect()->route('todos.index')->with('message', 'Todo successfully created');
@@ -86,10 +101,12 @@ class TodoController extends Controller
     {
         $request->validate([
             'name' => 'required|min:3',
+            'prior' => 'required|max:99',
             'category_id' => 'required'
         ]);
         $todo->update([
             'name' => $request->name,
+            'prior' => $request->prior,
             'category_id' => $request->category_id
         ]);
         return redirect()->route('todos.index')->with('message', 'Todo successfully updated');
@@ -105,5 +122,22 @@ class TodoController extends Controller
     {
         $todo->delete();
         return redirect()->route('todos.index')->with('message', 'Todo successfully deleted');
+    }
+
+    
+    public function todosByCategory($id) {
+        if ($id == 9999) {
+            $todos = Todo::orderBy('prior', 'asc')->paginate(10)->withQueryString();
+        } else {
+            $todos = Todo::where('category_id', $id)
+                ->orderBy('prior', 'asc')
+                ->paginate(10)->withQueryString();
+        }
+        $categories = Category::all();
+        
+        return view('todos.index', [
+            'todos' => $todos,
+            'categories' => $categories
+        ]);
     }
 }
