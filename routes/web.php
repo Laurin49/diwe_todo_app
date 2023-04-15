@@ -20,5 +20,6 @@ Route::middleware('auth')->group(function () {
 });
 Route::resource('/categories', CategoryController::class);
 Route::resource('/todos', TodoController::class);
+Route::get('/todos/{id}/category', [TodoController::class, 'todosByCategory']);
 
 require __DIR__.'/auth.php';
